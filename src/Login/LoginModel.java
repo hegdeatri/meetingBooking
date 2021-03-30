@@ -20,19 +20,27 @@ public class LoginModel {
          }catch(SQLException e){
              e.printStackTrace();
          }
-         if(this.connection==null){
-             System.exit(1);
-         }
      }
 
      //This will tell use whether the connection was established or not
      public boolean isConnected(){
-         return this.connection != null;
+         try{
+             Connection con = DBConnection.getConnection();
+             if(con != null){
+                 return true;
+             }else{
+                 return false;
+             }
+
+         }catch(Exception e){
+             e.printStackTrace();
+             return false;
+         }
      }
 
     //This will take the following parameters and will verify it with the database.
     // It will reject you if you try and login as a customer from and admin account and vice versa
-     public boolean isLogin(String username, String password, String Admin) throws SQLException {
+     public boolean isLogin(String username, String password, String AccountType)throws SQLException{
          PreparedStatement ps = null;
          ResultSet rs = null;
          String sql = "SELECT * FROM Users where Username = ? and Password = ? and Account = ?";
@@ -40,10 +48,11 @@ public class LoginModel {
              ps = this.connection.prepareStatement(sql);
              ps.setString(1, username);
              ps.setString(2, password);
-             ps.setString(3, Admin);
+             ps.setString(3, AccountType);
 
              rs = ps.executeQuery();
              if(rs.next()){
+                 LoginController.currentUser = new User(rs.getInt(1), rs.getString(3), rs.getString(4), rs.getString(6), rs.getString(2));
                  return true;
              }
              return false;

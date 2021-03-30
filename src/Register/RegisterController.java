@@ -17,6 +17,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class RegisterController {
+
+    //<editor-fold desc="variables">
     @FXML
     private Label Heading;
     @FXML
@@ -36,7 +38,10 @@ public class RegisterController {
     @FXML
     private PasswordField passwordField;
     @FXML
+    private PasswordField verifyPasswordField;
+    @FXML
     private TextField emailField;
+    //</editor-fold>
 
     //This will take the following as parameters to add their details into the database. The ID column will be automatically incremented
     public boolean registerLogic(String Username, String Firstname, String Lastname, String Password, String Email) throws SQLException {
@@ -64,7 +69,7 @@ public class RegisterController {
 
     //This will make sure that the required format is entered returning true/false. For this project only verification of email is required.
     public boolean checkFormat() {
-        String regex = "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^-]+(?:\\.[a-zA-Z0-9_!#$%&'*+/=?`{|}~^-]+)*@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*$";
+        String regex = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(emailField.getText());
         return matcher.matches();
@@ -94,25 +99,30 @@ public class RegisterController {
     public void registerUser() throws SQLException {
         try {
 
-            if (usernameField.getText() != null
-                    && firstNameField.getText() != null
-                    && lastNameField.getText() != null
-                    && emailField.getText() != null
-                    && passwordField.getText() != null) {
+            if (!usernameField.getText().isEmpty()
+                    && !firstNameField.getText().isEmpty()
+                    && !lastNameField.getText().isEmpty()
+                    && !emailField.getText().isEmpty()
+                    && !passwordField.getText().isEmpty()
+                    && !verifyPasswordField.getText().isEmpty()) {
                 if (checkFormat()) {
-                    if (registerLogic(usernameField.getText(), firstNameField.getText(), lastNameField.getText(), passwordField.getText(), emailField.getText())) {
-                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                        alert.setTitle("Message");
-                        alert.setHeaderText(null);
-                        alert.setContentText("Account created!");
+                    if (passwordField.getText().equals(verifyPasswordField.getText())) {
+                        if (registerLogic(usernameField.getText(), firstNameField.getText(), lastNameField.getText(), passwordField.getText(), emailField.getText())) {
+                            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                            alert.setTitle("Message");
+                            alert.setHeaderText(null);
+                            alert.setContentText("Account created!");
 
-                        alert.showAndWait().ifPresent((btnType) -> {
-                            if (btnType == ButtonType.OK) {
-                                backToLogin();
-                            }
-                        });
-                    }else{
-                        errorLabel.setText("Account cannot be created with current details");
+                            alert.showAndWait().ifPresent((btnType) -> {
+                                if (btnType == ButtonType.OK) {
+                                    backToLogin();
+                                }
+                            });
+                        }else{
+                            errorLabel.setText("Account cannot be created with current details");
+                        }
+                    } else {
+                        errorLabel.setText("Passwords do not match!");
                     }
 
                 } else {

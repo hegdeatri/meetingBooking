@@ -6,14 +6,20 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.stage.Stage;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
 public class LoginController implements Initializable {
+
+    //<editor-fold desc="variables">
+    //This stores the information of the current user
+    public static User currentUser;
     //creates a LoginModel
-    LoginModel loginModel = new LoginModel();
+    private final LoginModel loginModel = new LoginModel();
     //If any variable are not used in the methods, then are probably are used for styling in the stylesheet (Login.css) which is in the stylesheet folder
     @FXML
     private Label connectionLabel;
@@ -21,6 +27,10 @@ public class LoginController implements Initializable {
     private Label credentialsLabel;
     @FXML
     private Label meetingBookerLabel;
+    @FXML
+    private Label backgroundLabel;
+    @FXML
+    private ImageView background;
     @FXML
     private Button loginButton;
     @FXML
@@ -31,16 +41,22 @@ public class LoginController implements Initializable {
     private PasswordField passwordField;
     @FXML
     private ComboBox<String> accountType;
+    //</editor-fold>
 
 
 //Initialize method the tells us whether if successfully connected to the database or not
     public void initialize(URL url, ResourceBundle rb) {
         if (this.loginModel.isConnected()) {
             connectionLabel.setText("Connected to DB");
-        } else {
+        } else{
             connectionLabel.setText("DB offline");
         }
         accountType.getItems().addAll("Admin", "Customer");
+        Image image = new Image("/images/login.jpg");
+        background = new ImageView(image);
+        background.setFitHeight(400);
+        background.setPreserveRatio(true);
+        backgroundLabel.setGraphic(background);
     }
 
     //This method will take the inputs from the fields, verify that they are correct and will take them to their respective window, based on their account type
@@ -54,10 +70,10 @@ public class LoginController implements Initializable {
                 stage.close();
                 switch (accountType.getValue()) {
                     case "Admin":
-                        adminLogin();
+                        adminLogin(currentUser);
                         break;
                     case "Customer":
-                        customerLogin();
+                        customerLogin(currentUser);
                         break;
                 }
             } else {
@@ -67,14 +83,16 @@ public class LoginController implements Initializable {
         }
     }
 
+    //<editor-fold desc="methods to open other windows">
     //Launches the admin dashboard, the related files are in the Admin package
-    public void adminLogin() {
+    public void adminLogin(User currentUser) {
         try {
             Stage stage = new Stage();
             FXMLLoader loader = new FXMLLoader();
             Parent root = loader.load(getClass().getResource("/Admin/Admin.fxml").openStream());
             Scene scene = new Scene(root, 1280, 720);
             scene.getStylesheets().add(getClass().getResource("/Stylesheets/Admin.css").toExternalForm());
+            stage.getIcons().add(new Image("/images/admin.png"));
             stage.setScene(scene);
             stage.setTitle("Admin Dashboard");
             stage.setResizable(false);
@@ -86,13 +104,14 @@ public class LoginController implements Initializable {
     }
 
     //Launches the customer dashboard, the related files are in the Customer package
-    public void customerLogin() {
+    public void customerLogin(User currentUser) {
         try {
             Stage stage = new Stage();
             FXMLLoader loader = new FXMLLoader();
             Parent root = loader.load(getClass().getResource("/Customer/Customer.fxml").openStream());
-            Scene scene = new Scene(root, 1280, 720);
+            Scene scene = new Scene(root, 900, 720);
             scene.getStylesheets().add(getClass().getResource("/Stylesheets/Customer.css").toExternalForm());
+            stage.getIcons().add(new Image("/images/customer.png"));
             stage.setScene(scene);
             stage.setTitle("Customer Dashboard");
             stage.setResizable(false);
@@ -113,6 +132,7 @@ public class LoginController implements Initializable {
             Parent root = loader.load(getClass().getResource("/Register/Register.fxml").openStream());
             Scene scene = new Scene(root, 400, 400);
             scene.getStylesheets().add(getClass().getResource("/Stylesheets/Register.css").toExternalForm());
+            stage.getIcons().add(new Image("/images/add.png"));
             stage.setScene(scene);
             stage.setTitle("Register Page");
             stage.setResizable(false);
@@ -123,5 +143,6 @@ public class LoginController implements Initializable {
         }
 
     }
+    //</editor-fold>
 
 }
