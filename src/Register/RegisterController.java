@@ -1,6 +1,7 @@
 package Register;
 
 import DBUtil.DBConnection;
+import Login.LoginModel;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -10,9 +11,12 @@ import javafx.scene.control.*;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,17 +48,18 @@ public class RegisterController {
     //</editor-fold>
 
     //This will take the following as parameters to add their details into the database. The ID column will be automatically incremented
-    public boolean registerLogic(String Username, String Firstname, String Lastname, String Password, String Email) throws SQLException {
+    public boolean registerLogic(String Username, String Firstname, String Lastname, String Email) throws SQLException {
         String sql = "INSERT INTO Users(Username, Firstname, Lastname, Password, Email, Account) VALUES (?, ?, ?, ?, ?, ?)";
         try {
             Connection con = DBConnection.getConnection();
             assert con != null;
             PreparedStatement statement = con.prepareStatement(sql);
+            String hashedPass = LoginModel.getPassHash(passwordField.getText());
 
             statement.setString(1, Username);
             statement.setString(2, Firstname);
             statement.setString(3, Lastname);
-            statement.setString(4, Password);
+            statement.setString(4, hashedPass);
             statement.setString(5, Email);
             statement.setString(6, "Customer");
 
@@ -72,7 +77,16 @@ public class RegisterController {
         String regex = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(emailField.getText());
-        return matcher.matches();
+        int passLength = passwordField.getLength();
+        if(passLength >= 6 && passLength <=12){
+            return matcher.matches();
+        }
+        if(!matcher.matches()){
+            errorLabel.setText("Invalid email address");
+        }
+        errorLabel.setText("Password must be between 6-12 characters long");
+        return false;
+
     }
 
     //This will take you back to the login page.
@@ -95,6 +109,32 @@ public class RegisterController {
         }
     }
 
+    public static boolean isPasswordMatching(PasswordField pass, PasswordField verify){
+        return pass.getText().equals(verify.getText());
+    }
+
+    //This method will return true if the given username is already taken/in use.
+    public static boolean isUsernameTaken(String username) throws SQLException{
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        String sql = "SELECT * FROM Users WHERE Username = ?";
+        try{
+            Connection con = DBConnection.getConnection();
+            assert con != null;
+            ps = con.prepareStatement(sql);
+            ps.setString(1, username);
+            rs = ps.executeQuery();
+
+            return rs.next();
+        }catch(Exception e){
+            e.printStackTrace();
+            return true;
+        }finally{
+            ps.close();
+            rs.close();
+        }
+    }
+
     @FXML
     public void registerUser() throws SQLException {
         try {
@@ -106,27 +146,32 @@ public class RegisterController {
                     && !passwordField.getText().isEmpty()
                     && !verifyPasswordField.getText().isEmpty()) {
                 if (checkFormat()) {
-                    if (passwordField.getText().equals(verifyPasswordField.getText())) {
-                        if (registerLogic(usernameField.getText(), firstNameField.getText(), lastNameField.getText(), passwordField.getText(), emailField.getText())) {
-                            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                            alert.setTitle("Message");
-                            alert.setHeaderText(null);
-                            alert.setContentText("Account created!");
+                    //will return true if there is a duplicate user/ username already taken
+                    if (isPasswordMatching(passwordField, verifyPasswordField)) {
+                        boolean usernameTaken = isUsernameTaken(usernameField.getText());
+                        if (!usernameTaken) {
+                            if (registerLogic(usernameField.getText(), firstNameField.getText(), lastNameField.getText(), emailField.getText())) {
+                                errorLabel.setText("");
+                                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                                alert.setTitle("Message");
+                                alert.setHeaderText(null);
+                                alert.setContentText("Account created!");
 
-                            alert.showAndWait().ifPresent((btnType) -> {
-                                if (btnType == ButtonType.OK) {
-                                    backToLogin();
-                                }
-                            });
-                        }else{
-                            errorLabel.setText("Account cannot be created with current details");
+                                alert.showAndWait().ifPresent((btnType) -> {
+                                });
+                                backToLogin();
+                            }else{
+                                errorLabel.setText("Account cannot be created with current details");
+                            }
+                        } else {
+                            errorLabel.setText("Username already taken!");
                         }
                     } else {
                         errorLabel.setText("Passwords do not match!");
                     }
 
                 } else {
-                    errorLabel.setText("Invalid email address!");
+                    //errorLabel set in checkFormat method
                 }
             }else{
                 errorLabel.setText("Missing information!");

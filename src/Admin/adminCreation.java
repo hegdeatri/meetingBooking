@@ -2,9 +2,12 @@ package Admin;
 
 /*
 This class is almost completely the same os registerController.java in the Register package
+I was probably not thinking straight while coding this.
  */
 
 import DBUtil.DBConnection;
+import Login.LoginModel;
+import Register.RegisterController;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -41,21 +44,24 @@ public class adminCreation {
     @FXML
     private PasswordField passwordField;
     @FXML
+    private PasswordField verifyPasswordField;
+    @FXML
     private TextField emailField;
     //</editor-fold>
 
     //This will take the following as parameters to add their details into the database. The ID column will be automatically incremented
-    public boolean registerLogic(String Username, String Firstname, String Lastname, String Password, String Email) throws SQLException {
+    public boolean registerLogic(String Username, String Firstname, String Lastname, String Email) throws SQLException {
         String sql = "INSERT INTO Users(Username, Firstname, Lastname, Password, Email, Account) VALUES (?, ?, ?, ?, ?, ?)";
         try {
             Connection con = DBConnection.getConnection();
             assert con != null;
             PreparedStatement statement = con.prepareStatement(sql);
+            String hashedPass = LoginModel.getPassHash(passwordField.getText());
 
             statement.setString(1, Username);
             statement.setString(2, Firstname);
             statement.setString(3, Lastname);
-            statement.setString(4, Password);
+            statement.setString(4, hashedPass);
             statement.setString(5, Email);
             statement.setString(6, "Admin");
 
@@ -73,7 +79,15 @@ public class adminCreation {
         String regex = "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(emailField.getText());
-        return matcher.matches();
+        int passLength = passwordField.getLength();
+        if(passLength >= 6 && passLength <=12){
+            return matcher.matches();
+        }
+        if(!matcher.matches()){
+            errorLabel.setText("Invalid email address");
+        }
+        errorLabel.setText("Password must be between 6-12 characters long");
+        return false;
     }
 
     //This will take you back to the login page.
@@ -102,29 +116,39 @@ public class adminCreation {
     public void registerUser() throws SQLException {
         try {
 
-            if (usernameField.getText() != null
-                    && firstNameField.getText() != null
-                    && lastNameField.getText() != null
-                    && emailField.getText() != null
-                    && passwordField.getText() != null) {
+            if (!usernameField.getText().isEmpty()
+                    && !firstNameField.getText().isEmpty()
+                    && !lastNameField.getText().isEmpty()
+                    && !emailField.getText().isEmpty()
+                    && !passwordField.getText().isEmpty()
+                    && !verifyPasswordField.getText().isEmpty()) {
                 if (checkFormat()) {
-                    if (registerLogic(usernameField.getText(), firstNameField.getText(), lastNameField.getText(), passwordField.getText(), emailField.getText())) {
-                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                        alert.setTitle("Message");
-                        alert.setHeaderText(null);
-                        alert.setContentText("Account created!");
+                    if (RegisterController.isPasswordMatching(passwordField, verifyPasswordField)) {
+                        //will return true if there is a duplicate user/ username already taken
+                        boolean usernameTaken = RegisterController.isUsernameTaken(usernameField.getText());
+                        if (!usernameTaken) {
+                            if (registerLogic(usernameField.getText(), firstNameField.getText(), lastNameField.getText(), emailField.getText())) {
+                                errorLabel.setText("");
+                                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                                alert.setTitle("Message");
+                                alert.setHeaderText(null);
+                                alert.setContentText("Account created!");
 
-                        alert.showAndWait().ifPresent((btnType) -> {
-                            if (btnType == ButtonType.OK) {
+                                alert.showAndWait().ifPresent((btnType) -> {
+                                });
                                 backToAdmin();
+                            }else{
+                                errorLabel.setText("Account cannot be created with current details");
                             }
-                        });
-                    }else{
-                        errorLabel.setText("Account cannot be created with current details");
+                        } else {
+                            errorLabel.setText("Username already taken!");
+                        }
+                    } else {
+                        errorLabel.setText("Passwords do not match!");
                     }
 
                 } else {
-                    errorLabel.setText("Invalid email address!");
+                    //errorLabel text set in checkFormat method
                 }
             }else{
                 errorLabel.setText("Missing information!");

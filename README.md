@@ -1,3 +1,10 @@
+# Meeting Booker Instructions
+- Cleaner's and caterer's dashboard can be viewed from the admin panel
+- Only Admin's can create new Admin accounts.
+- For demo purposes, the default Admin account has the username -  "owner" and password - "hello". (excluding the quotation marks.)
+- Timetables are automatically generated (for cleaners and caterers).
+- If you want to make it so that the user will be able to book for more than one day, the database is already compatible with this, therefore the only parts needed to change is the logic for booking rooms, and scheduling catering services.
+
 # Books meeting rooms
 - [ ] Add the ability to edit bookings.
 - [X] Catering Dashboard.
@@ -6,11 +13,13 @@
 - [X] Automatically does not allow you to add refreshments at the same time as others.  
 - [X] Customer cannot book 'occupied' rooms and cannot book unless room has been serviced.
 - [X] Customer Page verifies email format.
-- [ ] Duplicate user accounts verification  
+- [x] Duplicate user accounts verification
+- [X] Password hashing.  
 - [ ] ~~Customer requests for room, and Admins approve the requests.~~  
 - [ ] ~~Greyed out buttons when room is unavailable.~~  
 - [X] Stylize UI + Add tooltips.
-### Known mistakes (will be fixed soon)
+### Known mistakes (will be fixed if project needs updating)
+- Admin creation is mostly duplicate code from the register package, will fix soon
 - Displays incorrect error message when trying to book a room.
 - Displays the booked time slots instead of the free time slots.
 ### A few shortcomings to take note of
@@ -41,13 +50,6 @@ Room 5 | 50 people | false
 - Users will have to use an email to register a booking. Verify that the email is given in the correct format.
 - Show the user the list of available rooms/ available timeslots in sorted order.
 - A user should not be able to book 2 meeting rooms for the same time and date slot.
-
-### Meeting Booker Instructions
-- Cleaner's and caterer's dashboard can be viewed from the admin panel
-- Only Admin's can create new Admin accounts.
-- For demo purposes, the default Admin account has the username -  "owner" and password - "hello". (excluding the quotation marks.)
-- Timetables are automatically generated (for cleaners and caterers).
-- If you want to make it so that the user will be able to book for more than one day, the database is already compatible with this, therefore the only parts needed to change is the logic for booking rooms, and scheduling catering services.
 
 ### Notes to be taken from this project
 Some pointers so that I have a project plan next time before I start a project
